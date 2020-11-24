@@ -1,5 +1,6 @@
 # I've updated fplscrapR::get_league_entries to include 
 # first and last pages, i.e. skipping the first N pages.
+# Also username and password are read from a local file.
 
 get_league_entries_updated <- 
     
