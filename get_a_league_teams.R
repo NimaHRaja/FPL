@@ -1,29 +1,16 @@
-source("Functions/init.R")
+# get_a_league_teams recieves league_id and week_number
+# and returns the teams of entries of 
+# the given league_id for the given week_number + metadata.
 
-league_id <- 1138028
-week_number <- 8
-
-league_entries <- get_league_entries(league_id)
-
-
-entries_teams <- 
+get_a_league_teams <- function(league_id, week_number){
+    
+    league_entries <- get_league_entries_updated(league_id)
+    
     do.call("rbind", lapply(league_entries$entry,
                             function(x){get_entry_picks(x, week_number)$picks %>% 
-                                    mutate(entry = x)})) 
-
-# entries_teams <- entries_teams %>% filter(multiplier != 0)
-
-sim_matrix <- 
-    inner_join(
-        entries_teams %>% select(element,entry),
-        entries_teams %>% select(element,entry),
-        by = "element") %>% 
-    group_by(entry.x,entry.y) %>%
-    summarise(similarity = n()) %>% 
-    ungroup() %>% 
-    rename(entry = entry.x) %>%
-    inner_join(league_entries %>% select(entry_name,entry), by = "entry") %>% 
-    select(-entry) %>% 
-    rename(entry = entry.y) %>%
-    inner_join(league_entries %>% select(entry_name,entry), by = "entry") %>%
-    mutate(similarity = similarity/15)
+                                    mutate(entry = x)})) %>%
+        inner_join(league_entries, by = "entry") %>%
+        mutate(league_id = league_id, 
+               week_number = week_number,
+               league_name = get_league_updated(1138028)$league$name)
+}
