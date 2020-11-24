@@ -3,7 +3,7 @@
 
 get_league_entries_updated <- 
     
-    function (leagueid = NULL, leaguetype = "classic", first_page, num_pages = 1) 
+    function (leagueid = NULL, leaguetype = "classic", first_page = 1, num_pages = 1) 
     {
         if (is.null(leagueid)) 
             stop("You'll need to input a league ID, mate.")
@@ -13,8 +13,9 @@ get_league_entries_updated <-
             stop("The number of pages needs to be a whole number.")
         {
             fplfetchhandle <- curl::new_handle()
-            curl::handle_setform(fplfetchhandle, login = readline("Please enter your FPL login email: "), 
-                                 password = getPass::getPass(msg = "Please enter your FPL password:"), 
+            curl::handle_setform(fplfetchhandle, 
+                                 login = read.csv("login_data.csv") %>% select(username) %>% as.character(), 
+                                 password = read.csv("login_data.csv") %>% select(password) %>% as.character(), 
                                  redirect_uri = "https://fantasy.premierleague.com/a/login", 
                                  app = "plfpl-web")
             fplfetchmemory <- curl::curl_fetch_memory("https://users.premierleague.com/accounts/login/", 
