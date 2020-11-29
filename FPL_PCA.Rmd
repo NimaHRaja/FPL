@@ -1,0 +1,81 @@
+---
+title: "FPL_PCA"
+author: "Nima Hamedani-Raja"
+date: "28/11/2020"
+output: 
+  html_document: 
+    keep_md: yes
+    number_sections: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+# about
+
+Here, I am (back)documenting (some of) the steps I've taken to use *PCA* to analyse *FPL* teams.  
+To do: explain template and differentials, PCA, ... 
+
+```{r init}
+source("Functions/init.R")
+```
+
+# Getting data
+
+## Data
+
+I am using *fplscrapR*. I have also modified some of fplscrapR's methods.  
+I am focusing on two subsets of data: teams of 8 players who compete in a private league, as well as the top 10K players.  
+I am focusing on week 9 rather arbitrarily, simply because that's when I did this!
+
+## getting and cleaning teams
+
+### getting all players of all teams of a league
+
+I'm using *get_a_league_teams()*.
+
+```{r get_a_league_teams}
+writeLines(readLines("Functions/get_a_league_teams.R"))
+
+private_league_entries_teams_flat <- get_a_league_teams(1138028,9)
+head(private_league_entries_teams_flat)
+```
+
+### Cleaning private_league_entries_teams_flat
+
+Not all these columns are needed. Let's trim it down.
+
+```{r trim_private_league_entries_teams_flat}
+private_league_entries_teams_flat <- private_league_entries_teams_flat %>% 
+    select(id, playername,multiplier,entry,player_name,entry_name,league_name,week_number,
+           league_name,total_points,value)
+tail(private_league_entries_teams_flat)
+```
+
+Multiplier (used by *FPL API*) demonstrates wether a player was benched (0), played (1), or was captain (2). I'm interested in active teams. so I'll remove the unused subs.
+
+```{r remove_multiplier_0}
+private_league_entries_teams_flat <- private_league_entries_teams_flat %>% filter(multiplier != 0)
+```
+
+### dcating private_league_entries_teams_flat
+
+After dcasting, each team is reprented by a vector of 1s(10 player), 2 (the captain), and 0s (the rest).  
+```{r dcast_private_league_entries_teams_flat}
+private_league_entries_teams <- 
+    private_league_entries_teams_flat %>% dcast(player_name ~ playername, value.var = "multiplier")
+
+private_league_entries_teams[is.na(private_league_entries_teams)] <- 0
+
+row.names(private_league_entries_teams) <- private_league_entries_teams$player_name
+
+private_league_entries_teams <- private_league_entries_teams %>% select(-player_name)
+
+t(private_league_entries_teams)
+```
+
+
+
+
