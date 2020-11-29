@@ -17,6 +17,7 @@ get_a_league_teams <- function(league_id, week_number, first_page = 1, num_pages
     }else{
         
         league_entries <- get_league_entries_updated(league_id) %>% rename(team_id = id)
+        league_name <- get_league_updated(league_id)$league$name
         
         output <- 
             do.call("rbind", lapply(league_entries$entry,
@@ -25,9 +26,15 @@ get_a_league_teams <- function(league_id, week_number, first_page = 1, num_pages
             inner_join(league_entries, by = "entry") %>%
             mutate(league_id = league_id,
                    week_number = week_number,
-                   league_name = get_league_updated(1138028)$league$name)
+                   league_name = league_name)
         
-        write.csv(output,output_file)
+        output <- 
+            inner_join(output,
+                       get_players_details(unique(output$id),week_number), 
+                       by = "playername")
+        
+        
+        write.csv(output,output_file, row.names = FALSE)
     }
     
     output
