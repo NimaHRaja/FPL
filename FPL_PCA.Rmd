@@ -6,6 +6,7 @@ output:
   html_document: 
     keep_md: yes
     number_sections: yes
+    toc: yes
 ---
 
 ```{r setup, include=FALSE}
@@ -76,6 +77,37 @@ private_league_entries_teams <- private_league_entries_teams %>% select(-player_
 t(private_league_entries_teams)
 ```
 
+# PCA  
+
+Let's PCA!  
+
+```{r private_league_PCA}
+private_league_PCA <- prcomp(private_league_entries_teams)
+
+private_league_PCA$sdev
+```
+
+unfortunately, all sdev-s are significant. A significant chunk of information will be lost if some of them are cut out.  
+Let's make sure we can reconstruct the original matrix:  
+
+```{r private_league_PCA test}
+(((private_league_PCA$x %*% t(private_league_PCA$rotation)) + 
+    (as.matrix(rep(1,8)) %*% t(private_league_PCA$center))) - 
+   private_league_entries_teams) %>% 
+  melt() %>% 
+  summarise(min(value), max(value))
+```
+
+Which players emerge as important in Principal Axes?
+
+```{r which players in PA}
+private_league_PCA$rotation %>% 
+  melt() %>% 
+  filter(abs(value) > 0.3) %>% 
+  dcast(Var1 ~ Var2, value.var = "value")
+```
+
+Owning Fernandes and Kane  seem to contribute a lot into the differences between teams (but not as much I'd like). 
 
 
 
