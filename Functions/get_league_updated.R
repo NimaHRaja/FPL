@@ -1,4 +1,4 @@
-# I've updated fplscrapR::get_league to read 
+# I've updated fplscrapR::get_league 
 # username and password are read from a local file.
 
 get_league_updated <- 

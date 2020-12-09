@@ -24,3 +24,8 @@ library(reshape2)
 user_history_current %>% mutate(total_points = as.integer(total_points)) %>%
     dcast(formula = name  ~ season_name,value.var = "total_points", sum) %>% 
     ggplot(aes(x = `2019/20`, y = `2020/21`)) + geom_point()
+
+
+player_history %>% filter(season_name > '2017') %>% 
+    mutate(rank = as.integer(rank)) %>% filter(rank < 20000) %>% group_by(name) %>%
+    summarise(n()) %>% View()
