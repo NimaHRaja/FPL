@@ -1,13 +1,16 @@
 # I've updated fplscrapR::get_league_entries to include 
 # first and last pages, i.e. skipping the first N pages.
-# Also username and password are read from a local file.
+# username and password are read from a local file.
+# it also searches for a local version of the data file before 
+# fetching the data from FPL.
 
 get_league_entries_updated <- 
     
     function (leagueid = NULL, leaguetype = "classic", week_number, first_page = 1, num_pages = 1) 
     {
         output_file <- 
-            paste("data/league_entries_", league_id, "_week", week_number, ".csv", sep = "")
+            paste("data/league_entries_", leagueid, "_week", week_number, "_", 
+                  first_page, "-", num_pages, ".csv", sep = "")
         
         if(file.exists(output_file)){
             
@@ -43,10 +46,10 @@ get_league_entries_updated <-
                     entries <- rbind(entries, standings$standings$results)
                 }
                 
-                write.csv(entries,output_file, row.names = FALSE)
                 }
             
-            entries
+            
+            write.csv(entries,output_file, row.names = FALSE)
             return(entries)
         }
     }
