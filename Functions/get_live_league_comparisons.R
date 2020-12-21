@@ -1,3 +1,5 @@
+# compares the entries of a league as they game goes on
+
 get_live_league_comparisons <- function(league_id, week_number, live_matches = NULL, my_player){
     
     teams <- get_a_league_teams(league_id, week_number, refetch = TRUE)
