@@ -21,7 +21,7 @@ get_live_league_comparisons <- function(league_id, week_number, live_matches = N
         
         points_dcast <- data.frame()
         
-        if(length(local_DF) != 0){
+        if(dim(local_DF)[1] != 0){
             points_dcast <- 
                 local_DF %>% mutate(points = multiplier * total_points) %>%
                 dcast(playername ~ player_name, value.var = "points")
@@ -43,7 +43,7 @@ get_live_league_comparisons <- function(league_id, week_number, live_matches = N
         
         points_delta <- data.frame()
         
-        if(length(local_DF) != 0){
+        if(dim(local_DF)[1] != 0){
             points_delta <- 
                 inner_join(
                     melt(local_DF, id.vars = "playername"),
@@ -67,7 +67,7 @@ get_live_league_comparisons <- function(league_id, week_number, live_matches = N
     
     notstarted_players_dcast <- data.frame()
     
-    if(length(notstarted_players) != 0){
+    if(dim(notstarted_players)[1] != 0){
         notstarted_players_dcast <- 
             notstarted_players %>% mutate(live_points = multiplier) %>%
             dcast(playername ~ player_name, value.var = "live_points") 
@@ -77,7 +77,7 @@ get_live_league_comparisons <- function(league_id, week_number, live_matches = N
     
     notstarted_players_delta <- data.frame()
     
-    if(length(notstarted_players_dcast) != 0){
+    if(dim(notstarted_players_dcast)[1] != 0){
         
     notstarted_players_delta <- 
         inner_join(
