@@ -11,7 +11,7 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-
+library(knitr)
 ```
 
 # about
@@ -41,7 +41,7 @@ I'm using *get_a_league_teams()*.
 writeLines(readLines("Functions/get_a_league_teams.R"))
 
 private_league_entries_teams_flat <- get_a_league_teams(1138028,9)
-head(private_league_entries_teams_flat)
+head(private_league_entries_teams_flat) %>% t() %>% kable()
 ```
 
 ### Cleaning private_league_entries_teams_flat
@@ -52,7 +52,7 @@ Not all these columns are needed. Let's trim it down.
 private_league_entries_teams_flat <- private_league_entries_teams_flat %>% 
     select(id, playername,multiplier,entry,player_name,entry_name,league_name,week_number,
            league_name,total_points,value)
-tail(private_league_entries_teams_flat)
+tail(private_league_entries_teams_flat) %>% kable()
 ```
 
 Multiplier (used by *FPL API*) demonstrates wether a player was benched (0), played (1), or was captain (2). I'm interested in active teams. so I'll remove the unused subs.
@@ -66,18 +66,20 @@ private_league_entries_teams_flat <- private_league_entries_teams_flat %>% filte
 After dcasting, each team is reprented by a vector of 1s(10 player), 2 (the captain), and 0s (the rest).  
 ```{r dcast_private_league_entries_teams_flat}
 private_league_entries_teams <- 
-    private_league_entries_teams_flat %>% dcast(player_name ~ playername, value.var = "multiplier")
+    private_league_entries_teams_flat %>% dcast(entry_name ~ playername, value.var = "multiplier")
 
 private_league_entries_teams[is.na(private_league_entries_teams)] <- 0
 
-row.names(private_league_entries_teams) <- private_league_entries_teams$player_name
+row.names(private_league_entries_teams) <- private_league_entries_teams$entry_name
 
-private_league_entries_teams <- private_league_entries_teams %>% select(-player_name)
+private_league_entries_teams <- private_league_entries_teams %>% select(-entry_name)
 
 t(private_league_entries_teams)
 ```
 
 # PCA  
+
+## PCA  
 
 Let's PCA!  
 
@@ -98,16 +100,87 @@ Let's make sure we can reconstruct the original matrix:
   summarise(min(value), max(value))
 ```
 
+## Principal Axes  
+
 Which players emerge as important in Principal Axes?
 
-```{r which players in PA}
+```{r private_league_PCA - which players in PA}
 private_league_PCA$rotation %>% 
   melt() %>% 
   filter(abs(value) > 0.3) %>% 
-  dcast(Var1 ~ Var2, value.var = "value")
+  dcast(Var1 ~ Var2, value.var = "value") %>%
+  kable()
 ```
 
 Owning Fernandes and Kane  seem to contribute a lot into the differences between teams (but not as much I'd like). 
 
+To reconstruct the teams using PAs, the following rotation matrix can be used.
+```{r private_league_PCA - rotation matrix}
+private_league_PCA$x %>% kable()
+```
 
+## Player's points contributions
 
+How many points does a player contribute to a PA?  
+
+```{r private_league_players_PCA_points}
+private_league_players_PCA_points_flat <- 
+  inner_join( 
+    private_league_PCA$rotation %>% 
+      melt() %>% 
+      mutate(Var1 = as.character(Var1)) %>%
+      rename(playername = Var1, PA = Var2),
+    private_league_entries_teams_flat %>% 
+      select(playername, total_points) %>% 
+      unique(),
+    by = "playername"
+  ) %>%
+  group_by(playername, PA) %>%
+  summarise(points = sum(value * total_points)) %>%
+  ungroup() 
+
+private_league_players_PCA_points <- 
+  private_league_players_PCA_points_flat %>%
+  dcast(playername ~ PA, value.var = "points") 
+
+private_league_players_PCA_points %>% kable()
+```
+
+Unfortunately, they are NOT insignificant. 
+
+As a test, let's find game week points using this matrix and compare it with actual. 
+
+```{r entries_PA_points - test}
+entries_PA_points <- 
+  data.frame(points = 
+  private_league_PCA$x %*% 
+  (private_league_players_PCA_points %>% select(-playername) %>% t()) %>% 
+  rowSums())
+
+entries_PA_points <-
+  entries_PA_points %>% 
+  mutate(entry_name = row.names(entries_PA_points))
+average_team_points <- 
+  inner_join(
+    data.frame(value = private_league_PCA$center) %>% 
+      mutate(playername = row.names(data.frame(private_league_PCA$center))), 
+    private_league_entries_teams_flat %>% 
+      select(playername, total_points) %>% 
+      unique(),
+    by = "playername") %>% 
+  summarise(average_team_points = sum(value*total_points)) %>% 
+  as.numeric()
+
+entries_points_1 <- entries_PA_points %>% mutate(points = points + average_team_points)
+
+entries_points_2 <-
+  private_league_entries_teams_flat %>% 
+  group_by(entry_name) %>%
+  summarise(points = sum(total_points*multiplier))
+
+inner_join(entries_points_1,entries_points_2,by = "entry_name") %>% kable()
+```
+
+## Summary
+
+It didn't work (expand later)
