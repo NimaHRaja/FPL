@@ -13,6 +13,22 @@ get_live_league_comparisons <- function(league_id, week_number, live_matches = N
                                      if_else(max_minutes_per_fixture > 0, "live",
                                              "not_started")))
     
+    teams <- 
+        rbind(
+            teams %>% 
+                filter(position %in% c(1,12)) %>%
+                group_by(player_name) %>%
+                filter(position == min(position)) %>%
+                ungroup(),
+            teams %>%
+                filter(!position %in% c(1,12)) %>% 
+                group_by(player_name) %>%
+                mutate(rr = min_rank(position)) %>% 
+                filter(rr <= 10) %>%
+                select(-rr) %>%
+                ungroup()) %>% 
+        mutate(multiplier = ifelse((multiplier == 0), 1, multiplier))
+    
     live_players <- teams %>% filter(position < 12 & game_status == "live")
     completed_players <- teams %>% filter(position < 12 & game_status == "completed")
     notstarted_players <- teams %>% filter(position < 12 & game_status == "not_started")
@@ -51,10 +67,14 @@ get_live_league_comparisons <- function(league_id, week_number, live_matches = N
                     melt(local_DF, id.vars = "playername"),
                     melt(local_DF, id.vars = "playername") %>% filter(variable == my_player),
                     by = "playername") %>% mutate(delta = value.y - value.x) %>%
-                filter(delta != 0) %>% 
-                dcast(variable.x ~ playername , value.var = "delta")
+                filter(delta != 0)
             
-            points_delta[is.na(points_delta)] <- 0
+            if(dim(points_delta)[1] != 0){
+                points_delta <- points_delta %>% 
+                    dcast(variable.x ~ playername , value.var = "delta")
+                
+                points_delta[is.na(points_delta)] <- 0
+            }
         }
         
         points_delta
@@ -81,19 +101,19 @@ get_live_league_comparisons <- function(league_id, week_number, live_matches = N
     
     if(dim(notstarted_players_dcast)[1] != 0){
         
-    notstarted_players_delta <- 
-        inner_join(
-            melt(notstarted_players_dcast, id.vars = "playername"),
-            melt(notstarted_players_dcast, id.vars = "playername") %>% filter(variable == my_player),
-            by = "playername") %>% mutate(delta = value.y - value.x) %>%
-        filter(delta != 0) %>% 
-        dcast(variable.x ~ playername , value.var = "delta")
-    
-    notstarted_players_delta[is.na(notstarted_players_delta)] <- 0
+        notstarted_players_delta <- 
+            inner_join(
+                melt(notstarted_players_dcast, id.vars = "playername"),
+                melt(notstarted_players_dcast, id.vars = "playername") %>% filter(variable == my_player),
+                by = "playername") %>% mutate(delta = value.y - value.x) %>%
+            filter(delta != 0) %>% 
+            dcast(variable.x ~ playername , value.var = "delta")
+        
+        notstarted_players_delta[is.na(notstarted_players_delta)] <- 0
     }
     
     ###############################
-
+    
     live_points <-
         teams %>% group_by(player_name) %>%
         filter(game_status == "live") %>%
