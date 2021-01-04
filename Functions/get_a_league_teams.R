@@ -2,7 +2,7 @@
 # and returns the teams of entries of 
 # the given league_id for the given week_number + metadata.
 # it also searches for a local version of the data file before 
-# fetching the data from FPL.
+# fetching the data from FPL. This can be turned off if refetch is set to TRUE.
 
 get_a_league_teams <- 
     function(league_id, week_number, first_page = 1, num_pages = 1, refetch = FALSE){
