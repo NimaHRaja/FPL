@@ -1,4 +1,6 @@
-# compares the entries of a league as they game goes on
+# compares the entries of a league. Best used when a game is live.
+# Recieves league_id, week_number, and a player's name (my_player)
+# and returnes 11 DFs which compares the teams and points and ... 
 
 get_live_league_comparisons <- function(league_id, week_number, live_matches = NULL, my_player){
     
@@ -29,9 +31,9 @@ get_live_league_comparisons <- function(league_id, week_number, live_matches = N
                 ungroup()) %>% 
         mutate(multiplier = ifelse((multiplier == 0), 1, multiplier))
     
-    live_players <- teams %>% filter(position < 12 & game_status == "live")
-    completed_players <- teams %>% filter(position < 12 & game_status == "completed")
-    notstarted_players <- teams %>% filter(position < 12 & game_status == "not_started")
+    live_players <- teams %>% filter(game_status == "live") # position < 12 & 
+    completed_players <- teams %>% filter(game_status == "completed") # position < 12 & 
+    notstarted_players <- teams %>% filter(game_status == "not_started") # position < 12 & 
     
     ##############################
     
