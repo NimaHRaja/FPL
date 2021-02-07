@@ -3,6 +3,7 @@
 # username and password are read from a local file.
 # it also searches for a local version of the data file before 
 # fetching the data from FPL.
+# Called by: get_a_league_teams
 
 get_league_entries_updated <- 
     

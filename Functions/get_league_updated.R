@@ -1,5 +1,6 @@
 # I've updated fplscrapR::get_league to
 # read username and password are read from a local file.
+# Called by: get_a_league_teams
 
 get_league_updated <- 
     
