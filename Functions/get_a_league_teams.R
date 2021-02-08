@@ -5,6 +5,8 @@
 # fetching the data from FPL. This can be turned off if refetch is set to TRUE.
 # Calls: get_league_entries_updated
 # Calls: get_league_updated
+# Calls: get_players_details
+# Called by: get_live_league_teams_points
 
 get_a_league_teams <- 
     function(league_id, week_number, first_page = 1, num_pages = 1, refetch = FALSE){
@@ -25,6 +27,7 @@ get_a_league_teams <-
                                            first_page = first_page, 
                                            num_pages = num_pages) %>% 
                 rename(team_id = id)
+            
             league_name <- get_league_updated(league_id)$league$name
             
             output <- 
