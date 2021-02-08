@@ -1,35 +1,11 @@
 # compares the entries of a league. Best used when a game is live.
 # Recieves league_id, week_number, and a player's name (my_player)
 # and returnes 11 DFs which compares the teams and points and ... 
+# Calls: get_live_league_teams_points
 
 get_live_league_comparisons <- function(league_id, week_number, live_matches = NULL, my_player){
     
-    teams <- get_a_league_teams(league_id, week_number, refetch = TRUE)
-    
-    teams <- 
-        teams %>% 
-        group_by(fixture) %>% 
-        mutate(max_minutes_per_fixture = max(minutes)) %>% 
-        ungroup() %>% 
-        mutate(game_status = if_else(max_minutes_per_fixture == 90, "completed",
-                                     if_else(max_minutes_per_fixture > 0, "live",
-                                             "not_started")))
-    
-    teams <- 
-        rbind(
-            teams %>% 
-                filter(position %in% c(1,12)) %>%
-                group_by(player_name) %>%
-                filter(position == min(position)) %>%
-                ungroup(),
-            teams %>%
-                filter(!position %in% c(1,12)) %>% 
-                group_by(player_name) %>%
-                mutate(rr = min_rank(position)) %>% 
-                filter(rr <= 10) %>%
-                select(-rr) %>%
-                ungroup()) %>% 
-        mutate(multiplier = ifelse((multiplier == 0), 1, multiplier))
+    teams <- get_live_league_teams_points(league_id, week_number)
     
     live_players <- teams %>% filter(game_status == "live") # position < 12 & 
     completed_players <- teams %>% filter(game_status == "completed") # position < 12 & 
