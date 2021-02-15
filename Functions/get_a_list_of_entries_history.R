@@ -1,4 +1,7 @@
-get_a_list_of_entries_history <- function(list_of_entries){
+# receives a list_of_entries
+# and returns their history + their current position
+
+get_a_list_of_entries_history <- function(list_of_entries, current_season = '2020/21'){
     
     print(Sys.time())
     
@@ -10,7 +13,7 @@ get_a_list_of_entries_history <- function(list_of_entries){
     
     
     user_current <- 
-        list_of_entries %>% mutate(season_name = '2020/21',
+        list_of_entries %>% mutate(season_name = current_season,
                                    total_points = total,
                                    name = player_name,
                                    entry = entry) %>%
